@@ -3,6 +3,7 @@ import bodyParser from "koa-bodyparser";
 import {errorHandler} from "./src/middlewares/errorHandler.js";
 import authRoutes from "./src/routes/authRoutes.js";
 import userRoutes from "./src/routes/userRoutes.js";
+import profileRoutes from "./src/routes/profileRoutes.js"
 import "dotenv/config";
 
 import { AppDataSource } from "./src/data-source.js";
@@ -36,28 +37,10 @@ AppDataSource.initialize()
 // mount routes
 app.use(authRoutes.routes()).use(authRoutes.allowedMethods());
 app.use(userRoutes.routes()).use(userRoutes.allowedMethods());
+app.use(profileRoutes.routes()).use(profileRoutes.allowedMethods());
 
 
-console.log("Registered auth routes:");
-authRoutes.stack.forEach(r => console.log(`${r.methods} ${r.path}`));
 
-console.log("Registered user routes:");
-userRoutes.stack.forEach(r => console.log(`${r.methods} ${r.path}`));
-
-
-// basic root
-app.use(async (ctx, next) => {
-  if (ctx.path === "/" && ctx.method === "GET") {
-    ctx.body = { message: "Koa Auth API running" };
-    return;
-  }
-  await next();
-});
-app.use(async ctx => {
-  if (ctx.path === "/ping") {
-    ctx.body = "pong";
-  }
-});
 
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {

@@ -2,10 +2,12 @@ import jwt from "jsonwebtoken";
 import { loginSchema, registerSchema } from "../utils/validators.js";
 import * as userService from "../services/userService.js";
 import "dotenv/config";
-
-const JWT_SECRET = process.env.JWT_SECRET || "supersecret";
-const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "1h";
-
+import { generateOtp, getExpiry } from "../utils/otpUtil.js";
+import { sendOtpEmail } from "../utils/emailUtil.js";
+import bcrypt from "bcrypt"
+const JWT_SECRET = process.env.JWT_SECRET ;
+const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN ;
+import { AppDataSource } from "../data-source.js";
 
 const register = async (ctx) => {
   try {
@@ -97,6 +99,40 @@ const login = async (ctx) => {
       message: ctx.status === 500 ? "Internal server error" : err.message,
     };
   }
+  console.log("JWT_SECRET:", process.env.JWT_SECRET);
+
+};
+
+export const forgotPassword = async (ctx) => {
+  const { email } = ctx.request.body;
+  const userRepo = AppDataSource.getRepository("User");
+  const otpRepo = AppDataSource.getRepository("Otp"); // create OTP table in DB
+
+  const user = await userRepo.findOne({ where: { email } });
+  if (!user) return ctx.throw(404, "User not found");
+
+  const otp = generateOtp();
+  const expiresAt = getExpiry();
+  await otpRepo.save({ email, otp, expiresAt });
+
+  await sendOtpEmail(email, otp);
+  ctx.body = { success: true, message: "OTP sent to email" };
+};
+
+export const resetPassword = async (ctx) => {
+  const { email, otp, newPassword } = ctx.request.body;
+  const userRepo = AppDataSource.getRepository("User");
+  const otpRepo = AppDataSource.getRepository("Otp");
+
+  const record = await otpRepo.findOne({ where: { email, otp } });
+  if (!record || record.expiresAt < Date.now()) return ctx.throw(400, "Invalid or expired OTP");
+
+  const user = await userRepo.findOne({ where: { email } });
+  user.password = await bcrypt.hash(newPassword, 10);
+  await userRepo.save(user);
+
+  await otpRepo.delete({ email });
+  ctx.body = { success: true, message: "Password reset successful" };
 };
 
 export{register,login}
