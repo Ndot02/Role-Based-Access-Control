@@ -3,7 +3,7 @@ import { loginSchema, registerSchema } from "../utils/validators.js";
 import * as userService from "../services/userService.js";
 import "dotenv/config";
 import { generateOtp, getExpiry } from "../utils/otpUtil.js";
-import { sendOtpEmail } from "../utils/emailUtil.js";
+import { sendOTP } from "../utils/emailUtil.js";
 import bcrypt from "bcrypt"
 const JWT_SECRET = process.env.JWT_SECRET ;
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN ;
@@ -115,7 +115,7 @@ export const forgotPassword = async (ctx) => {
   const expiresAt = getExpiry();
   await otpRepo.save({ email, otp, expiresAt });
 
-  await sendOtpEmail(email, otp);
+  await sendOTP(email, otp);
   ctx.body = { success: true, message: "OTP sent to email" };
 };
 

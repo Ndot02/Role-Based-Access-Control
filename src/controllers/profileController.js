@@ -2,9 +2,10 @@ import { AppDataSource } from "../data-source.js";
 
 export const updateProfile = async (ctx) => {
   const userId = ctx.state.user.userId;
-  console.log("ctx.state.user at route:", ctx.state.user);
-  console.log("userId:",userId)
-  const { bio, phoneNumber, address, dateOfBirth } = ctx.request.body;
+  // console.log("ctx.state.user at route:", ctx.state.user);
+  // console.log("userId:",userId)
+  const { bio, phoneNumber, address, dateOfBirth } = ctx.req.body;
+  
   const profileRepo = AppDataSource.getRepository("Profile");
 
   let profile = await profileRepo.findOne({ where: { user: { id: userId } } });

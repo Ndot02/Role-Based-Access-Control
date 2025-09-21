@@ -1,6 +1,7 @@
 import "reflect-metadata";
 import { DataSource } from "typeorm";
 import dotenv from "dotenv";
+
 import { User } from "./entity/User.js";
 import { Role } from "./entity/Role.js";
 import { Profile } from "./entity/Profile.js";
